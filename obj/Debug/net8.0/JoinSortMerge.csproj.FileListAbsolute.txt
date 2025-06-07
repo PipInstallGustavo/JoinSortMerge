@@ -1,0 +1,5 @@
+/home/ruan/Documentos/UFC/SGBD/Trabalho02/JoinSortMerge/obj/Debug/net8.0/JoinSortMerge.GeneratedMSBuildEditorConfig.editorconfig
+/home/ruan/Documentos/UFC/SGBD/Trabalho02/JoinSortMerge/obj/Debug/net8.0/JoinSortMerge.AssemblyInfoInputs.cache
+/home/ruan/Documentos/UFC/SGBD/Trabalho02/JoinSortMerge/obj/Debug/net8.0/JoinSortMerge.AssemblyInfo.cs
+/home/ruan/Documentos/UFC/SGBD/Trabalho02/JoinSortMerge/obj/Debug/net8.0/JoinSortMerge.csproj.CoreCompileInputs.cache
+/home/ruan/Documentos/UFC/SGBD/Trabalho02/JoinSortMerge/obj/Debug/net8.0/JoinSortMerge.sourcelink.json

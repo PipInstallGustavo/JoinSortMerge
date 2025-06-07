@@ -35,10 +35,11 @@ namespace SortMergeJoin{
 
         public void Executar(){
             //Assumindo que as tabelas já estão ordenadas
-            //(IMPLEMENTAR)
-            // arquivo.OrdenacaoExterna(tabela1);
-            // arquivo.OrdenacaoExterna(tabela2);
+            string arquivoOrdenado1 = _tabela1.OrdenacaoExterna(_tabela1, _colunaTabela1);
+            string arquivoOrdenado2 = _tabela2.OrdenacaoExterna(_tabela2, _colunaTabela2);
 
+            _tabela1 = new Tabela.Tabela(arquivoOrdenado1);
+            _tabela2 = new Tabela.Tabela(arquivoOrdenado2);
             // Obter os índices das colunas de junção para acesso eficiente
             int indexCol1 = GetColumnIndex(_tabela1, _colunaTabela1);
             int indexCol2 = GetColumnIndex(_tabela2, _colunaTabela2);
