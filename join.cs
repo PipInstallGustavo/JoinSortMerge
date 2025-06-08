@@ -1,26 +1,25 @@
+using System;
 using System.Collections.Generic;
-using System.IO; 
-using System.Linq; 
-//namespaces
-using Pagina; 
-using Tupla;   
-using Tabela;  
+using System.IO;
+using System.Linq;
 
-namespace SortMergeJoin{
-    public class SortMergeJoin{
-        private Tabela.Tabela _tabela1; // Tabela 1
-        private Tabela.Tabela _tabela2; // Tabela 2
-        private string _colunaTabela1; // Nome da coluna de junção na Tabela 1
-        private string _colunaTabela2; // Nome da coluna de junção na Tabela 2
-        private string _arquivoSaida; // Nome do arquivo para o resultado 
+namespace Operador
+{
+    public class Operador
+    {
+        private Tabela.Tabela _tabela1; //tabela de entrada 1
+        private Tabela.Tabela _tabela2; //tabela de entrada 2
+        private readonly string _colunaTabela1; //coluna da tabela 1
+        private readonly string _colunaTabela2; //coluna da tabela 2
+        private readonly string _arquivoSaida; //arquivo de saída(csv)
 
-        // Métricas de desempenho
-        public int NumPagsGeradas { get; private set; } // Número de páginas de resultado geradas
-        public int NumIOExecutados { get; private set; } // Número total de operações de IO (leitura e escrita)
-        public int NumTuplasGeradas { get; private set; } // Número de tuplas resultantes da junção
+        public int NumPagsGeradas { get; private set; }
+        public int NumIOExecutados { get; private set; }
+        public int NumTuplasGeradas { get; private set; }
 
-        // Construtor
-        public SortMergeJoin(Tabela.Tabela tabela1, Tabela.Tabela tabela2, string colunaTabela1, string colunaTabela2, string arquivoSaida)
+        //construtor
+        public Operador(Tabela.Tabela tabela1, Tabela.Tabela tabela2, 
+            string colunaTabela1, string colunaTabela2, string arquivoSaida)
         {
             _tabela1 = tabela1;
             _tabela2 = tabela2;
@@ -33,74 +32,89 @@ namespace SortMergeJoin{
             NumTuplasGeradas = 0;
         }
 
-        public void Executar(){
-            //Assumindo que as tabelas já estão ordenadas
+        public void Executar()
+        {
+            // Ordenar as tabelas primeiro
             string arquivoOrdenado1 = _tabela1.OrdenacaoExterna(_tabela1, _colunaTabela1);
             string arquivoOrdenado2 = _tabela2.OrdenacaoExterna(_tabela2, _colunaTabela2);
 
+            // Recriar as tabelas ordenadas
             _tabela1 = new Tabela.Tabela(arquivoOrdenado1);
             _tabela2 = new Tabela.Tabela(arquivoOrdenado2);
-            // Obter os índices das colunas de junção para acesso eficiente
-            int indexCol1 = GetColumnIndex(_tabela1, _colunaTabela1);
-            int indexCol2 = GetColumnIndex(_tabela2, _colunaTabela2);
 
-            if (indexCol1 == -1 || indexCol2 == -1){
-                System.Console.WriteLine("Erro: Coluna de junção não encontrada em uma das tabelas.");
+            //pegar o index da coluna do join nos cabeçalhos
+            int indexCol1 = Array.FindIndex(_tabela1.Headers, h => h.Equals(_colunaTabela1, StringComparison.OrdinalIgnoreCase));
+            int indexCol2 = Array.FindIndex(_tabela2.Headers, h => h.Equals(_colunaTabela2, StringComparison.OrdinalIgnoreCase));
+
+            if (indexCol1 == -1 || indexCol2 == -1)
+            {
+                Console.WriteLine("Erro: Coluna de junção não encontrada em uma das tabelas.");
                 return;
             }
 
-            // Usar iteradores para ler tuplas dos arquivos ordenados
-            IEnumerator<Tupla.Tupla> enumerator1 = Tabela.Tabela.LerTuplasDeArquivoInterativo(
-                _tabela1.NomeArquivo, _tabela1.QtdCols, ref NumIOExecutados).GetEnumerator();
-            IEnumerator<Tupla.Tupla> enumerator2 = Tabela.Tabela.LerTuplasDeArquivoInterativo(
-                _tabela2.NomeArquivo, _tabela2.QtdCols, ref NumIOExecutados).GetEnumerator();
+            int ioLeituraContador = 0;
+            Action incrementarIO = () => ioLeituraContador++;
 
-            bool Next1 = enumerator1.MoveNext();
-            bool Next2 = enumerator2.MoveNext();
+            var enumerator1 = Tabela.Tabela.LerTuplasDeArquivoInterativo(
+                _tabela1.NomeArquivo, _tabela1.QtdCols, incrementarIO).GetEnumerator();
 
-            List<Tupla.Tupla> tuplasResultantes = new List<Tupla.Tupla>();
+            var enumerator2 = Tabela.Tabela.LerTuplasDeArquivoInterativo(
+                _tabela2.NomeArquivo, _tabela2.QtdCols  , incrementarIO).GetEnumerator();
 
-            while (Next1 && Next2){
-                Tupla.Tupla tupla1 = enumerator1.Current;
-                Tupla.Tupla tupla2 = enumerator2.Current;
+            NumIOExecutados += ioLeituraContador;
+
+            bool hasNext1 = enumerator1.MoveNext();
+            bool hasNext2 = enumerator2.MoveNext();
+
+            var tuplasResultantes = new List<Tupla.Tupla>();
+
+            //combinar cabeçalhos para o output
+            var outputHeaders = _tabela1.Headers.Concat(_tabela2.Headers).ToArray();
+
+            while (hasNext1 && hasNext2)
+            {
+                var tupla1 = enumerator1.Current;
+                var tupla2 = enumerator2.Current;
 
                 string valorCol1 = tupla1.Cols[indexCol1];
                 string valorCol2 = tupla2.Cols[indexCol2];
 
+                //etapa de comparação
                 int comparisonResult = string.Compare(valorCol1, valorCol2);
 
-                if (comparisonResult < 0) { // tupla1.col < tupla2.col
-                    Next1 = enumerator1.MoveNext(); // Avança na Tabela 1
+                if (comparisonResult < 0)
+                {
+                    hasNext1 = enumerator1.MoveNext();
                 }
-                else if (comparisonResult > 0) {// tupla1.col > tupla2.col
-                    Next2 = enumerator2.MoveNext(); // Avança na Tabela 2
+                else if (comparisonResult > 0)
+                {
+                    hasNext2 = enumerator2.MoveNext();
                 }
-                else {// Chaves iguais, realizar junção{
-                    // Lidar com tuplas duplicadas na chave de junção. Para um Sort Merge Join robusto, precisamos coletar todas as tuplas de ambas as tabelas que correspondem ao valor da chave atual.
-                    List<Tupla.Tupla> matchingTuplas1 = new List<Tupla.Tupla>();
-                    List<Tupla.Tupla> matchingTuplas2 = new List<Tupla.Tupla>();
-
-                    // Coleta todas as tuplas de Tabela 1 com o valor de chave atual
-                    matchingTuplas1.Add(tupla1);
-                    Next1 = enumerator1.MoveNext();
-                    while (Next1 && string.Compare(enumerator1.Current.Cols[indexCol1], valorCol1) == 0){
+                else
+                {
+                    var matchingTuplas1 = new List<Tupla.Tupla> { tupla1 };
+                    hasNext1 = enumerator1.MoveNext();
+                    
+                    while (hasNext1 && string.Compare(enumerator1.Current.Cols[indexCol1], valorCol1) == 0)
+                    {
                         matchingTuplas1.Add(enumerator1.Current);
-                        Next1 = enumerator1.MoveNext();
+                        hasNext1 = enumerator1.MoveNext();
                     }
 
-                    // Coleta todas as tuplas de Tabela 2 com o valor de chave atual
-                    matchingTuplas2.Add(tupla2);
-                    Next2 = enumerator2.MoveNext();
-                    while (Next2 && string.Compare(enumerator2.Current.Cols[indexCol2], valorCol2) == 0){
+                    var matchingTuplas2 = new List<Tupla.Tupla> { tupla2 };
+                    hasNext2 = enumerator2.MoveNext();
+                    
+                    while (hasNext2 && string.Compare(enumerator2.Current.Cols[indexCol2], valorCol2) == 0)
+                    {
                         matchingTuplas2.Add(enumerator2.Current);
-                        Next2 = enumerator2.MoveNext();
+                        hasNext2 = enumerator2.MoveNext();
                     }
 
-                    // Combina todas as tuplas correspondentes
-                    foreach (var mTupla1 in matchingTuplas1){
-                        foreach (var mTupla2 in matchingTuplas2){
-                            // Combina as colunas das duas tuplas.
-                            string[] combinedCols = new string[mTupla1.QtdCols + mTupla2.QtdCols];
+                    foreach (var mTupla1 in matchingTuplas1)
+                    {
+                        foreach (var mTupla2 in matchingTuplas2)
+                        {
+                            var combinedCols = new string[mTupla1.QtdCols + mTupla2.QtdCols];
                             mTupla1.Cols.CopyTo(combinedCols, 0);
                             mTupla2.Cols.CopyTo(combinedCols, mTupla1.QtdCols);
                             
@@ -110,44 +124,17 @@ namespace SortMergeJoin{
                     }
                 }
             }
+
+            // criar o arquivo de saída
+            File.WriteAllText(_arquivoSaida, string.Join(",", outputHeaders) + Environment.NewLine);
+            Tabela.Tabela.GravarTuplasEmArquivo(_arquivoSaida, tuplasResultantes, 
+                paginas => NumPagsGeradas = paginas, append: true);
             
-            // Grava as tuplas resultantes em um novo arquivo.
-            // O contador de páginas gravadas é atualizado dentro deste método estático.
-            Tabela.Tabela.GravarTuplasEmArquivo(_arquivoSaida, tuplasResultantes, ref NumPagsGeradas);
-            // A contagem de IOs para escrita já está sendo adicionada em GravarTuplasEmArquivo via NumPagsGeradas
             NumIOExecutados += NumPagsGeradas;
-        }
 
-        // Método auxiliar para encontrar o índice de uma coluna na tabela
-        private int GetColumnIndex(Tabela.Tabela tabela, string columnName)
-        {
-            // Para obter o índice da coluna, precisaríamos do cabeçalho do CSV ou
-            // de um esquema definido na classe Tabela.
-            // Como Tabela não armazena nomes de colunas explicitamente neste exemplo,
-            // vamos simular lendo a primeira linha do arquivo para descobrir os cabeçalhos.
-            // Isso adiciona um IO extra se a Tabela não carregar cabeçalhos.
-            if (!File.Exists(tabela.NomeArquivo))
-            {
-                return -1; // Arquivo não existe
-            }
-
-            using (StreamReader sr = new StreamReader(tabela.NomeArquivo))
-            {
-                string headerLine = sr.ReadLine();
-                if (string.IsNullOrEmpty(headerLine))
-                {
-                    return -1; // Arquivo vazio
-                }
-                string[] headers = headerLine.Split(','); // Assumindo vírgula como delimitador
-                for (int i = 0; i < headers.Length; i++)
-                {
-                    if (headers[i].Trim().Equals(columnName.Trim(), System.StringComparison.OrdinalIgnoreCase))
-                    {
-                        return i;
-                    }
-                }
-            }
-            return -1; // Coluna não encontrada
+            // Deletar arquivos temporários
+            try { File.Delete(arquivoOrdenado1); } catch { }
+            try { File.Delete(arquivoOrdenado2); } catch { }
         }
     }
 }

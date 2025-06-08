@@ -8,19 +8,19 @@
     "net8.0": []
   },
   "packageFolders": {
-    "/home/ruan/.nuget/packages/": {}
+    "/home/gustavo/.nuget/packages/": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/home/ruan/Documentos/UFC/SGBD/Trabalho02/JoinSortMerge/JoinSortMerge.csproj",
+      "projectUniqueName": "/home/gustavo/Área de Trabalho/sgbd_trab2/JoinSortMerge.csproj",
       "projectName": "JoinSortMerge",
-      "projectPath": "/home/ruan/Documentos/UFC/SGBD/Trabalho02/JoinSortMerge/JoinSortMerge.csproj",
-      "packagesPath": "/home/ruan/.nuget/packages/",
-      "outputPath": "/home/ruan/Documentos/UFC/SGBD/Trabalho02/JoinSortMerge/obj/",
+      "projectPath": "/home/gustavo/Área de Trabalho/sgbd_trab2/JoinSortMerge.csproj",
+      "packagesPath": "/home/gustavo/.nuget/packages/",
+      "outputPath": "/home/gustavo/Área de Trabalho/sgbd_trab2/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "/home/ruan/.nuget/NuGet/NuGet.Config"
+        "/home/gustavo/.nuget/NuGet/NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net8.0"
@@ -43,7 +43,8 @@
         "enableAudit": "true",
         "auditLevel": "low",
         "auditMode": "direct"
-      }
+      },
+      "SdkAnalysisLevel": "9.0.300"
     },
     "frameworks": {
       "net8.0": {
@@ -64,7 +65,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/8.0.410/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "/home/gustavo/.dotnet/sdk/9.0.300/PortableRuntimeIdentifierGraph.json"
       }
     }
   }
