@@ -34,11 +34,25 @@ namespace Operador
 
         public void Executar()
         {
-            // Ordenar as tabelas primeiro
-            string arquivoOrdenado1 = _tabela1.OrdenacaoExterna(_tabela1, _colunaTabela1);
-            string arquivoOrdenado2 = _tabela2.OrdenacaoExterna(_tabela2, _colunaTabela2);
+            // 1. Gerar runs ordenadas para cada tabela
+            var runs1 = _tabela1.SortExternalRunsFromLoadedPages(colunaOrdenacao: _colunaTabela1);
+            var runs2 = _tabela2.SortExternalRunsFromLoadedPages(colunaOrdenacao: _colunaTabela2);
 
-            // Recriar as tabelas ordenadas
+            // 2. Fazer o merge externo multiway para cada tabela
+           string arquivoOrdenado1 = Tabela.Tabela.MultiwayMerge(
+                runs1, 
+                _tabela1.Headers, 
+                _colunaTabela1, 
+                Path.GetFileNameWithoutExtension(_tabela1.NomeArquivo) // nome da tabela 1
+            );
+
+            string arquivoOrdenado2 = Tabela.Tabela.MultiwayMerge(
+                runs2, 
+                _tabela2.Headers, 
+                _colunaTabela2, 
+                Path.GetFileNameWithoutExtension(_tabela2.NomeArquivo) // nome da tabela 2
+            );
+            // 3. Recriar as tabelas ordenadas
             _tabela1 = new Tabela.Tabela(arquivoOrdenado1);
             _tabela2 = new Tabela.Tabela(arquivoOrdenado2);
 
@@ -131,10 +145,11 @@ namespace Operador
                 paginas => NumPagsGeradas = paginas, append: true);
             
             NumIOExecutados += NumPagsGeradas;
-
+            /*
             // Deletar arquivos temporários
             try { File.Delete(arquivoOrdenado1); } catch { }
             try { File.Delete(arquivoOrdenado2); } catch { }
+            */
         }
     }
 }
