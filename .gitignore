@@ -1,0 +1,11 @@
+bin/
+obj/
+out/
+Debug/
+Release/
+CSVtmp/
+# Ignorar todos os arquivos *.tmp
+*.tmp
+
+# Ignorar o arquivo específico saida.csv (na raiz do repositório)
+saida.csv
