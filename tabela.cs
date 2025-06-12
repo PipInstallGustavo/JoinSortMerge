@@ -2,10 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-<<<<<<< HEAD
 using Buffer;
-=======
->>>>>>> origin/InputManager
 
 namespace Tabela
 {
@@ -156,7 +153,6 @@ namespace Tabela
             }
         }
 
-<<<<<<< HEAD
 
         public List<string> SortExternalRunsFromLoadedPages(
             out int totalPaginasGeradas,
@@ -167,28 +163,14 @@ namespace Tabela
             var runs = new List<string>();
             int runCount = 0;
             totalPaginasGeradas = 0; // inicializa contador
-=======
-        public List<string> SortExternalRunsFromLoadedPages(
-            int bufferTamPaginas = 4, 
-            string delimitador = ",", 
-            string colunaOrdenacao = "vinho_id")
-        {
-            var runs = new List<string>();
-            int runCount = 0;
->>>>>>> origin/InputManager
 
             string tmpDir = "CSVtmp";
             if (!Directory.Exists(tmpDir))
                 Directory.CreateDirectory(tmpDir);
-<<<<<<< HEAD
-=======
-            // Descobre o índice da coluna de ordenação
->>>>>>> origin/InputManager
             int idxOrdenacao = Array.IndexOf(Headers, colunaOrdenacao);
             if (idxOrdenacao == -1)
                 throw new ArgumentException($"Coluna '{colunaOrdenacao}' não encontrada no cabeçalho.");
 
-<<<<<<< HEAD
             var buffer = new Buffer.BufferPaginas();
 
             for (int i = 0; i < Pags.Count; i += BufferPaginas.Tamanho)
@@ -205,14 +187,6 @@ namespace Tabela
                 // Junta todas as tuplas do buffer
                 var tuplasBuffer = buffer.Paginas.SelectMany(p => p.Tuplas).ToList();
 
-=======
-            for (int i = 0; i < Pags.Count; i += bufferTamPaginas)
-            {
-                var bufferPaginas = Pags.Skip(i).Take(bufferTamPaginas).ToList();
-                var tuplasBuffer = bufferPaginas.SelectMany(p => p.Tuplas).ToList();
-
-                // Detecta se a coluna de ordenação é numérica
->>>>>>> origin/InputManager
                 bool colunaNumerica = tuplasBuffer.All(t => int.TryParse(t.Cols[idxOrdenacao], out _));
 
                 tuplasBuffer.Sort((a, b) =>
@@ -235,23 +209,15 @@ namespace Tabela
                 string runFile = Path.Combine(tmpDir, $"{Path.GetFileNameWithoutExtension(NomeArquivo)}_run_{runCount}.csv");
                 runs.Add(runFile);
 
-<<<<<<< HEAD
                 int paginasGeradasNesteRun = 0;
                 GravarTuplasEmArquivo(
                     runFile,
                     tuplasBuffer,
                     p => paginasGeradasNesteRun = p, // captura páginas gravadas
-=======
-                GravarTuplasEmArquivo(
-                    runFile,
-                    tuplasBuffer,
-                    _ => { },
->>>>>>> origin/InputManager
                     delimitador,
                     append: false,
                     headers: Headers
                 );
-<<<<<<< HEAD
                 totalPaginasGeradas += paginasGeradasNesteRun;
             }
             buffer.Limpar();
@@ -261,22 +227,10 @@ namespace Tabela
 
         public static string MultiwayMerge(
             out int totalPaginasGeradas,
-=======
-            }
-
-            return runs;
-        }
-
-        public static string MultiwayMerge(
->>>>>>> origin/InputManager
             List<string> listOfRuns,
             string[] headers,
             string colunaOrdenacao,
             string nomeTabela,
-<<<<<<< HEAD
-=======
-            int bufferTamPaginas = 4,
->>>>>>> origin/InputManager
             string delimitador = ",")
         {
             int idxOrdenacao = Array.IndexOf(headers, colunaOrdenacao);
@@ -286,7 +240,6 @@ namespace Tabela
             int passo = 1;
             var listaAtual = new List<string>(listOfRuns);
 
-<<<<<<< HEAD
             // Usa BufferPaginas em vez de List<Pagina.Pagina>
             var buffer = new Buffer.BufferPaginas();
 
@@ -304,25 +257,6 @@ namespace Tabela
                     );
                     listaNova.Add(mergedRunFileName);
                     totalPaginasGeradas += paginasGeradasNesteMerge;
-=======
-            // Cria o buffer compartilhado (3 entradas + 1 saída)
-            var buffer = new List<Pagina.Pagina>();
-            for (int i = 0; i < bufferTamPaginas; i++)
-                buffer.Add(new Pagina.Pagina());
-
-            while (listaAtual.Count > 1)
-            {
-                var listaNova = new List<string>();
-                for (int i = 0; i < listaAtual.Count; i += bufferTamPaginas - 1)
-                {
-                    // runFileGroup contém apenas os nomes dos arquivos das runs a serem mescladas
-                    var runFileGroupNames = listaAtual.Skip(i).Take(bufferTamPaginas - 1).ToList();
-                    string mergedRunFileName = MergeRunsWithBuffer(
-                        runFileGroupNames, headers, idxOrdenacao, delimitador, passo, i / (bufferTamPaginas - 1) + 1, buffer, bufferTamPaginas,
-                        nomeTabela
-                    );
-                    listaNova.Add(mergedRunFileName);
->>>>>>> origin/InputManager
                 }
                 listaAtual = listaNova;
                 passo++;
@@ -331,10 +265,6 @@ namespace Tabela
         }
 
         // Função auxiliar para merge de runs usando buffer compartilhado
-<<<<<<< HEAD
-
-=======
->>>>>>> origin/InputManager
         private static string MergeRunsWithBuffer(
             List<string> runFiles,
             string[] headers,
@@ -342,16 +272,9 @@ namespace Tabela
             string delimitador,
             int passo,
             int grupo,
-<<<<<<< HEAD
             Buffer.BufferPaginas buffer,
             string nomeTabela,
             out int paginasGeradas)
-=======
-            List<Pagina.Pagina> buffer,
-            int bufferTamPaginas,
-            string nomeTabela)
-            
->>>>>>> origin/InputManager
         {
             bool colunaNumerica = true;
             foreach (var run in runFiles)
@@ -369,7 +292,6 @@ namespace Tabela
                     }
                 }
             }
-<<<<<<< HEAD
             int numEntradas = BufferPaginas.Tamanho - 1; // 3 páginas de entrada
 
             string tmpDir = "CSVtmp";
@@ -378,16 +300,6 @@ namespace Tabela
 
             // Limpa o buffer antes de usar
             buffer.Limpar();
-=======
-            int numEntradas = bufferTamPaginas - 1; // 3 páginas de entrada
-
-            string tmpDir = "CSVtmp";
-                if (!Directory.Exists(tmpDir))
-                    Directory.CreateDirectory(tmpDir);
-            // Limpa o buffer antes de usar
-            foreach (var pagina in buffer)
-                pagina.Tuplas.Clear();
->>>>>>> origin/InputManager
 
             // Abre um reader para cada run
             var readers = runFiles.Select(f => new StreamReader(f)).ToList();
@@ -396,21 +308,12 @@ namespace Tabela
             // Preenche as páginas de entrada do buffer
             for (int i = 0; i < runFiles.Count; i++)
             {
-<<<<<<< HEAD
                 while (buffer[i].QtdTuplasOcup < Pagina.Pagina.MaxTuplasPorPagina)
-=======
-                var pagina = buffer[i];
-                while (pagina.QtdTuplasOcup < Pagina.Pagina.MaxTuplasPorPagina)
->>>>>>> origin/InputManager
                 {
                     var linha = readers[i].ReadLine();
                     if (linha == null) break;
                     var tupla = new Tupla.Tupla(linha.Split(delimitador));
-<<<<<<< HEAD
                     buffer[i].AdicionarTupla(tupla);
-=======
-                    pagina.AdicionarTupla(tupla);
->>>>>>> origin/InputManager
                 }
             }
 
@@ -418,26 +321,15 @@ namespace Tabela
             using var sw = new StreamWriter(mergedFile);
             sw.WriteLine(string.Join(delimitador, headers));
 
-<<<<<<< HEAD
             int[] idxs = new int[numEntradas];  
             int paginasGravadas = 0;
-=======
-            int[] idxs = new int[numEntradas];
-
->>>>>>> origin/InputManager
             while (true)
             {
                 var candidatos = new List<(int idxRun, Tupla.Tupla tupla)>();
                 for (int i = 0; i < runFiles.Count; i++)
                 {
-<<<<<<< HEAD
                     if (idxs[i] < buffer[i].QtdTuplasOcup)
                         candidatos.Add((i, buffer[i].Tuplas[idxs[i]]));
-=======
-                    var pagina = buffer[i];
-                    if (idxs[i] < pagina.QtdTuplasOcup)
-                        candidatos.Add((i, pagina.Tuplas[idxs[i]]));
->>>>>>> origin/InputManager
                 }
 
                 if (candidatos.Count == 0)
@@ -453,7 +345,6 @@ namespace Tabela
                     menor = candidatos.OrderBy(x => x.tupla.Cols[idxOrdenacao], StringComparer.Ordinal).First();
                 }
 
-<<<<<<< HEAD
                 if (!buffer[BufferPaginas.Tamanho - 1].AdicionarTupla(menor.tupla))
                 {
                     foreach (var t in buffer[BufferPaginas.Tamanho - 1].Tuplas)
@@ -461,15 +352,6 @@ namespace Tabela
                     paginasGravadas++;
                     buffer[BufferPaginas.Tamanho - 1].Tuplas.Clear();
                     buffer[BufferPaginas.Tamanho - 1].AdicionarTupla(menor.tupla);
-=======
-                var paginaSaida = buffer[bufferTamPaginas - 1];
-                if (!paginaSaida.AdicionarTupla(menor.tupla))
-                {
-                    foreach (var t in paginaSaida.Tuplas)
-                        sw.WriteLine(t.ParaLinhaArquivo(delimitador));
-                    paginaSaida.Tuplas.Clear();
-                    paginaSaida.AdicionarTupla(menor.tupla);
->>>>>>> origin/InputManager
                 }
 
                 idxs[menor.idxRun]++;
@@ -488,7 +370,6 @@ namespace Tabela
                 }
             }
 
-<<<<<<< HEAD
             if (buffer[BufferPaginas.Tamanho - 1].QtdTuplasOcup > 0)
             {
                 foreach (var t in buffer[BufferPaginas.Tamanho - 1].Tuplas)
@@ -500,16 +381,6 @@ namespace Tabela
             paginasGeradas = paginasGravadas;
             // Limpa o buffer para evitar problemas
             buffer.Limpar();
-=======
-            var paginaFinal = buffer[bufferTamPaginas - 1];
-            if (paginaFinal.QtdTuplasOcup > 0)
-            {
-                foreach (var t in paginaFinal.Tuplas)
-                    sw.WriteLine(t.ParaLinhaArquivo(delimitador));
-            }
-
-            foreach (var r in readers) r.Dispose();
->>>>>>> origin/InputManager
             return mergedFile;
         }
     }
