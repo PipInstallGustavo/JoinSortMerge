@@ -15,10 +15,10 @@ class Program
 
         /*  
             Exemplo de uso do programa:
-            CSVs/uva.csv
-            CSVs/vinho.csv
-            uva_id
-            vinho_id
+CSVs/uva.csv
+CSVs/vinho.csv
+uva_id
+vinho_id
         */
         //o usuário provê o path do csv para o programa
         string tabela1 = Console.ReadLine();
