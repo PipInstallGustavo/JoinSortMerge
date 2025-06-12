@@ -128,11 +128,7 @@ namespace Tabela
         }
 
 
-<<<<<<< HEAD
         // Método para ler tuplas de um arquivo de forma iterativa
-=======
-        // Método para ler tuplas de um arquivo de forma iterativa (útil para External Sort e Merge Join)
->>>>>>> origin/InputManager
         public static IEnumerable<Tupla.Tupla> LerTuplasDeArquivoInterativo(string nomeArquivo, int qtdCols, 
             Action incrementarIO, string delimitador = ",")
         {
