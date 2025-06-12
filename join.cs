@@ -73,7 +73,11 @@ namespace Operador
                 _tabela1.NomeArquivo, _tabela1.QtdCols, incrementarIO).GetEnumerator();
 
             var enumerator2 = Tabela.Tabela.LerTuplasDeArquivoInterativo(
+<<<<<<< HEAD
                 _tabela2.NomeArquivo, _tabela2.QtdCols, incrementarIO).GetEnumerator();
+=======
+                _tabela2.NomeArquivo, _tabela2.QtdCols  , incrementarIO).GetEnumerator();
+>>>>>>> origin/InputManager
 
             NumIOExecutados += ioLeituraContador;
 
@@ -108,7 +112,11 @@ namespace Operador
                 {
                     var matchingTuplas1 = new List<Tupla.Tupla> { tupla1 };
                     hasNext1 = enumerator1.MoveNext();
+<<<<<<< HEAD
 
+=======
+                    
+>>>>>>> origin/InputManager
                     while (hasNext1 && string.Compare(enumerator1.Current.Cols[indexCol1], valorCol1) == 0)
                     {
                         matchingTuplas1.Add(enumerator1.Current);
@@ -117,7 +125,11 @@ namespace Operador
 
                     var matchingTuplas2 = new List<Tupla.Tupla> { tupla2 };
                     hasNext2 = enumerator2.MoveNext();
+<<<<<<< HEAD
 
+=======
+                    
+>>>>>>> origin/InputManager
                     while (hasNext2 && string.Compare(enumerator2.Current.Cols[indexCol2], valorCol2) == 0)
                     {
                         matchingTuplas2.Add(enumerator2.Current);
@@ -131,7 +143,11 @@ namespace Operador
                             var combinedCols = new string[mTupla1.QtdCols + mTupla2.QtdCols];
                             mTupla1.Cols.CopyTo(combinedCols, 0);
                             mTupla2.Cols.CopyTo(combinedCols, mTupla1.QtdCols);
+<<<<<<< HEAD
 
+=======
+                            
+>>>>>>> origin/InputManager
                             tuplasResultantes.Add(new Tupla.Tupla(combinedCols));
                             NumTuplasGeradas++;
                         }
@@ -141,6 +157,7 @@ namespace Operador
 
             // criar o arquivo de saída
             File.WriteAllText(_arquivoSaida, string.Join(",", outputHeaders) + Environment.NewLine);
+<<<<<<< HEAD
              Tabela.Tabela.GravarTuplasEmArquivo(_arquivoSaida, tuplasResultantes,
                 paginas => {
                     NumPagsGeradas = paginas;
@@ -148,6 +165,12 @@ namespace Operador
                 }, append: true);
             NumIOExecutados += NumPagsGeradas;
             NumPagsGeradas += paginasMergeGeradas1 + paginasMergeGeradas2 + paginasRunsGeradas1 + paginasRunsGeradas2;
+=======
+            Tabela.Tabela.GravarTuplasEmArquivo(_arquivoSaida, tuplasResultantes, 
+                paginas => NumPagsGeradas = paginas, append: true);
+            
+            NumIOExecutados += NumPagsGeradas;
+>>>>>>> origin/InputManager
             /*
             // Deletar arquivos temporários
             try { File.Delete(arquivoOrdenado1); } catch { }
