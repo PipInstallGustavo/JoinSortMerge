@@ -49,6 +49,32 @@ vinho_id
         Console.WriteLine($"#Tups: {op.NumTuplasGeradas}");
         // op.SalvarTuplasGeradas("selecao_vinho_ano_colheita_1990.csv"); // Retorna as tuplas geradas pela operação e salva em um csv
 
+         // Pergunta ao usuário se deseja excluir a pasta de arquivos temporários
+        Console.WriteLine("Deseja excluir a pasta dos arquivos temporários 'CSVtmp'? (s/n)");
+        string resposta = Console.ReadLine();
+        if (resposta.Trim().ToLower() == "s")
+        {
+            try
+            {
+                if (System.IO.Directory.Exists("CSVtmp"))
+                {
+                    System.IO.Directory.Delete("CSVtmp", true);
+                    Console.WriteLine("Pasta 'CSVtmp' excluída com sucesso.");
+                }
+                else
+                {
+                    Console.WriteLine("A pasta 'CSVtmp' não existe.");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Erro ao excluir a pasta: {ex.Message}");
+            }
+        }
+        else
+        {
+            Console.WriteLine("A pasta 'CSVtmp' foi mantida.");
+        }
         // Console.WriteLine(vinho);sGeradas}"); // Retorna a quantidade de páginas geradas pela operação
     }
 }
