@@ -34,29 +34,51 @@ namespace Operador
 
         public void Executar()
         {
-            int paginasRunsGeradas1, paginasRunsGeradas2;
-            //ordenar as tabelas
-            var runs1 = _tabela1.SortExternalRunsFromLoadedPages(out paginasRunsGeradas1, colunaOrdenacao: _colunaTabela1);
+            int paginasRunsGeradas1, paginasRunsLidas1, paginasRunsEscritas1;
+            var runs1 = _tabela1.SortExternalRunsFromLoadedPages(
+                out paginasRunsGeradas1, out paginasRunsLidas1, out paginasRunsEscritas1, colunaOrdenacao: _colunaTabela1);
+
             Console.WriteLine($"[DEBUG] Páginas geradas nos runs da tabela 1: {paginasRunsGeradas1}");
-            var runs2 = _tabela2.SortExternalRunsFromLoadedPages(out paginasRunsGeradas2, colunaOrdenacao: _colunaTabela2);
+            Console.WriteLine($"[DEBUG] Páginas lidas nos runs da tabela 1: {paginasRunsLidas1}");
+            Console.WriteLine($"[DEBUG] Páginas escritas nos runs da tabela 1: {paginasRunsEscritas1}");
+
+
+            int paginasRunsGeradas2, paginasRunsLidas2, paginasRunsEscritas2;
+            var runs2 = _tabela2.SortExternalRunsFromLoadedPages(
+                out paginasRunsGeradas2, out paginasRunsLidas2, out paginasRunsEscritas2, colunaOrdenacao: _colunaTabela2);
             Console.WriteLine($"[DEBUG] Páginas geradas nos runs da tabela 2: {paginasRunsGeradas2}");
-            int paginasMergeGeradas1, paginasMergeGeradas2;
+            Console.WriteLine($"[DEBUG] Páginas lidas nos runs da tabela 2: {paginasRunsLidas2}");
+            Console.WriteLine($"[DEBUG] Páginas escritas nos runs da tabela 2: {paginasRunsEscritas2}");
+
+            int paginasMergeGeradas1, paginasMergeLidas1, paginasMergeEscritas1;
             string arquivoOrdenado1 = Tabela.Tabela.MultiwayMerge(
-                out paginasMergeGeradas1,
+                out paginasMergeGeradas1, out paginasMergeLidas1, out paginasMergeEscritas1,
                 runs1,
                 _tabela1.Headers,
                 _colunaTabela1,
                 Path.GetFileNameWithoutExtension(_tabela1.NomeArquivo)
             );
             Console.WriteLine($"[DEBUG] Páginas geradas no merge da tabela 1: {paginasMergeGeradas1}");
+            Console.WriteLine($"[DEBUG] Páginas lidas no merge da tabela 1: {paginasMergeLidas1}");
+            Console.WriteLine($"[DEBUG] Páginas escritas no merge da tabela 1: {paginasMergeEscritas1}");
+
+
+            int paginasMergeGeradas2, paginasMergeLidas2, paginasMergeEscritas2;
             string arquivoOrdenado2 = Tabela.Tabela.MultiwayMerge(
-                out paginasMergeGeradas2,
+                out paginasMergeGeradas2, out paginasMergeLidas2, out paginasMergeEscritas2,
                 runs2,
                 _tabela2.Headers,
                 _colunaTabela2,
                 Path.GetFileNameWithoutExtension(_tabela2.NomeArquivo)
             );
             Console.WriteLine($"[DEBUG] Páginas geradas no merge da tabela 2: {paginasMergeGeradas2}");
+            Console.WriteLine($"[DEBUG] Páginas lidas no merge da tabela 2: {paginasMergeLidas2}");
+            Console.WriteLine($"[DEBUG] Páginas escritas no merge da tabela 2: {paginasMergeEscritas2}");
+
+            NumIOExecutados += paginasRunsLidas1 + paginasRunsEscritas1
+                + paginasRunsLidas2 + paginasRunsEscritas2
+                + paginasMergeLidas1 + paginasMergeEscritas1
+                + paginasMergeLidas2 + paginasMergeEscritas2;
             //pegar o index da coluna do join nos cabeçalhos
             int indexCol1 = Array.FindIndex(_tabela1.Headers, h => h.Equals(_colunaTabela1, StringComparison.OrdinalIgnoreCase));
             int indexCol2 = Array.FindIndex(_tabela2.Headers, h => h.Equals(_colunaTabela2, StringComparison.OrdinalIgnoreCase));
@@ -145,16 +167,13 @@ namespace Operador
                 paginas => {
                     NumPagsGeradas = paginas;
                     Console.WriteLine($"[DEBUG] Páginas geradas na gravação do resultado final: {paginas}");
-                }, append: true);
-
-            NumIOExecutados += NumPagsGeradas;
-            NumPagsGeradas += paginasMergeGeradas1 + paginasMergeGeradas2 + paginasRunsGeradas1 + paginasRunsGeradas2;
-            NumIOExecutados+=NumPagsGeradas; //leitura + escrita
-            /*
-            // Deletar arquivos temporários
-            try { File.Delete(arquivoOrdenado1); } catch { }
-            try { File.Delete(arquivoOrdenado2); } catch { }
-            */
+                },
+                append: true
+            );
+            NumIOExecutados += NumPagsGeradas; // cada página escrita do resultado final conta como IO
+            NumPagsGeradas += paginasRunsGeradas1 + paginasRunsGeradas2
+                + paginasMergeGeradas1 + paginasMergeGeradas2; // total de páginas geradas é a soma das páginas dos runs e merges
+            
         }
     }
 
