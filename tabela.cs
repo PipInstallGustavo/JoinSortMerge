@@ -169,7 +169,6 @@ namespace Tabela
             }
 
 
-            Console.WriteLine("[DEBUG] Tuplas Lidas no total (entrada): "+tuplasLidasTotal);
         }
 
 
