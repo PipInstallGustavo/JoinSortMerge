@@ -1,0 +1,3 @@
+Para compilar o programa é necessario ter dotnet 8 e colocar no terminal na pasta JoinSortMerge o comando: dotnet run main.cs
+
+Também é possivel rodar o programa por meio do JoinSortMerge.exe, é importante passar a entrada especificada no main.cs.
