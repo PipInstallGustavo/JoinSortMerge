@@ -36,6 +36,7 @@ vinho_id
         tabela_2.CarregarDados();
 
         // IMPLEMENTE O OPERADOR E DEPOIS EXECUTE AQUI
+        // Salva o resultado da operação em um arquivo CSV chamado "saida.csv"
         Operador.Operador op = new Operador.Operador(tabela_1, tabela_2, coluna1, coluna2, "saida.csv");
         // significa: SELECT * FROM Vinho V, Uva U WHERE V.vinho_id = U.uva_id
         // IMPORTANTE: isso é só um exemplo, podem ser tabelas/colunas distintas.
@@ -44,10 +45,10 @@ vinho_id
 
         op.Executar(); // Realiza a operação desejada
 
-        Console.WriteLine($"#Pags: {op.NumPagsGeradas}");// Retorna a quantidade de tuplas geradas pela operação
+        Console.WriteLine($"#Pags: {op.NumPagsGeradas}"); // Retorna a quantidade de páginas geradas pela operação
         Console.WriteLine($"#IOs: {op.NumIOExecutados}"); // Retorna a quantidade de IOs geradas pela operação
-        Console.WriteLine($"#Tups: {op.NumTuplasGeradas}");
-        // op.SalvarTuplasGeradas("selecao_vinho_ano_colheita_1990.csv"); // Retorna as tuplas geradas pela operação e salva em um csv
+        Console.WriteLine($"#Tups: {op.NumTuplasGeradas}");// Retorna a quantidade de tuplas geradas pela operação
+        
 
          // Pergunta ao usuário se deseja excluir a pasta de arquivos temporários
         Console.WriteLine("Deseja excluir a pasta dos arquivos temporários 'CSVtmp'? (s/n)");
@@ -75,7 +76,6 @@ vinho_id
         {
             Console.WriteLine("A pasta 'CSVtmp' foi mantida.");
         }
-        // Console.WriteLine(vinho);sGeradas}"); // Retorna a quantidade de páginas geradas pela operação
     }
 }
 

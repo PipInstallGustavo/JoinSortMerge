@@ -35,7 +35,9 @@ namespace Operador
         public void Executar()
         {
             int paginasRunsGeradas1, paginasRunsLidas1, paginasRunsEscritas1;
-            var runs1 = _tabela1.SortExternalRunsFromLoadedPages(
+            // Gera as runs externas para cada tabela
+            // e calcula as páginas geradas, lidas e escritas
+            var runs1 = _tabela1.SortExternalRuns(
                 out paginasRunsGeradas1, out paginasRunsLidas1, out paginasRunsEscritas1, colunaOrdenacao: _colunaTabela1);
 
             Console.WriteLine($"[DEBUG] Páginas geradas nos runs da tabela 1: {paginasRunsGeradas1}");
@@ -44,13 +46,15 @@ namespace Operador
 
 
             int paginasRunsGeradas2, paginasRunsLidas2, paginasRunsEscritas2;
-            var runs2 = _tabela2.SortExternalRunsFromLoadedPages(
+            var runs2 = _tabela2.SortExternalRuns(
                 out paginasRunsGeradas2, out paginasRunsLidas2, out paginasRunsEscritas2, colunaOrdenacao: _colunaTabela2);
             Console.WriteLine($"[DEBUG] Páginas geradas nos runs da tabela 2: {paginasRunsGeradas2}");
             Console.WriteLine($"[DEBUG] Páginas lidas nos runs da tabela 2: {paginasRunsLidas2}");
             Console.WriteLine($"[DEBUG] Páginas escritas nos runs da tabela 2: {paginasRunsEscritas2}");
 
             int paginasMergeGeradas1, paginasMergeLidas1, paginasMergeEscritas1;
+            // Faz o merge das runs externas para cada tabela para gerar o arquivo ordenado de cada tabela
+            // e calcula as páginas geradas, lidas e escritas
             string arquivoOrdenado1 = Tabela.Tabela.MultiwayMerge(
                 out paginasMergeGeradas1, out paginasMergeLidas1, out paginasMergeEscritas1,
                 runs1,
@@ -75,6 +79,7 @@ namespace Operador
             Console.WriteLine($"[DEBUG] Páginas lidas no merge da tabela 2: {paginasMergeLidas2}");
             Console.WriteLine($"[DEBUG] Páginas escritas no merge da tabela 2: {paginasMergeEscritas2}");
 
+            // Atribui o NumIOExecutados da ordenação externa
             NumIOExecutados += paginasRunsLidas1 + paginasRunsEscritas1
                 + paginasRunsLidas2 + paginasRunsEscritas2
                 + paginasMergeLidas1 + paginasMergeEscritas1

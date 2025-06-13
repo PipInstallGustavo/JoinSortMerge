@@ -33,7 +33,6 @@ namespace Tupla{
         public static Tupla DaLinhaArquivo(string linha, int qtdEsperadaCols, string delimitador = ",")
         {
             string[] valores = linha.Split(new[] { delimitador }, System.StringSplitOptions.None);
-            // Adicionar verificação se valores.Length == qtdEsperadaCols se necessário
             return new Tupla(valores);
         }
     }

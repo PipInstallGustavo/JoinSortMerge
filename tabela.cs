@@ -95,8 +95,7 @@ namespace Tabela
             }
         }
 
-        // Método para gravar tuplas diretamente em um arquivo (útil para resultados de junção ou tabelas ordenadas)
-        // Este método é mais flexível para arquivos grandes, pois não mantém tudo em memória.
+        // Método para gravar tuplas diretamente em um arquivo
         public static void GravarTuplasEmArquivo(string nomeArquivo, IEnumerable<Tupla.Tupla> tuplasParaGravar, 
             Action<int> atualizarContadorPaginas, string delimitador = ",", bool append = false, string[]? headers = null)
         {
@@ -128,8 +127,6 @@ namespace Tabela
         public static IEnumerable<Tupla.Tupla> LerTuplasDeArquivoInterativo(string nomeArquivo, int qtdCols, 
             Action incrementarIO, string delimitador = ",")
         {
-            // var buffer = new Buffer.BufferPaginas();
-            // var pagina = new List<Tupla.Tupla>(10);
             if (!File.Exists(nomeArquivo))
                 yield break;
 
@@ -145,34 +142,22 @@ namespace Tabela
                 if (string.IsNullOrWhiteSpace(linha)) continue;
 
                 if (tuplasLidasNaPaginaAtual == 0)
-                    incrementarIO(); //incrementa o quantidade de E/Ss 
+                    incrementarIO(); //incrementa o quantidade de I/Os 
 
                 yield return Tupla.Tupla.DaLinhaArquivo(linha, qtdCols, delimitador);
-                // Tupla.Tupla tupla_atual=tupla_atual=Tupla.Tupla.DaLinhaArquivo(linha, qtdCols, delimitador);
-                // buffer.Add(tupla_atual);
                 tuplasLidasNaPaginaAtual++;
                 tuplasLidasTotal++;
 
                 if (tuplasLidasNaPaginaAtual >= Pagina.Pagina.MaxTuplasPorPagina)
                     tuplasLidasNaPaginaAtual=0;
 
-                // if (tuplasLidasNaPaginaAtual >= Pagina.Pagina.MaxTuplasPorPagina)
-                //     Pagina.Pagina pagina = pagina;
-                //     buffer.AdicionarPagina(pagina);
-                //     pagina.Clear();
-                
-
-                // if (buffer.EstaCheio()){
-                //     incrementarIO();
-                //     buffer.Limpar();
-                // }
             }
 
 
         }
 
 
-        public List<string> SortExternalRunsFromLoadedPages(
+        public List<string> SortExternalRuns(
             out int totalPaginasGeradas,
             out int totalPaginasLidas,
             out int totalPaginasEscritas,
@@ -186,13 +171,15 @@ namespace Tabela
             totalPaginasLidas = 0;
             totalPaginasEscritas = 0;
 
+            // Diretório dos arquivos temporários
             string tmpDir = "CSVtmp";
             if (!Directory.Exists(tmpDir))
                 Directory.CreateDirectory(tmpDir);
+            // Verifica se a coluna de ordenação existe
             int idxOrdenacao = Array.IndexOf(Headers, colunaOrdenacao);
             if (idxOrdenacao == -1)
                 throw new ArgumentException($"Coluna '{colunaOrdenacao}' não encontrada no cabeçalho.");
-
+            // Inicializa o buffer
             var buffer = new Buffer.BufferPaginas();
 
             using var reader = new StreamReader(NomeArquivo);
@@ -201,7 +188,7 @@ namespace Tabela
             while (!reader.EndOfStream)
             {
                 buffer.Resetar();
-                // Preenche o buffer com as páginas
+                // Preenche o buffer com até 4 páginas e adiciona as tuplas nas páginas
                 for (int j = 0; j < Buffer.BufferPaginas.Tamanho && !reader.EndOfStream; j++)
                 {
                     bool paginaFoiLida = false;
@@ -223,8 +210,9 @@ namespace Tabela
                 if (tuplasBuffer.Count == 0)
                     break;
 
+                // Verifica se a coluna de ordenação é numérica ou alfanumérica
                 bool colunaNumerica = tuplasBuffer.All(t => int.TryParse(t.Cols[idxOrdenacao], out _));
-
+                // Ordena as tuplas no buffer usando a coluna de ordenação
                 tuplasBuffer.Sort((a, b) =>
                 {
                     var va = a.Cols[idxOrdenacao] ?? string.Empty;
@@ -242,9 +230,12 @@ namespace Tabela
                 });
 
                 runCount++;
+                // Cria o nome do arquivo para a run
                 string runFile = Path.Combine(tmpDir, $"{Path.GetFileNameWithoutExtension(NomeArquivo)}_run_{runCount}.csv");
+                // Adiciona o nome do arquivo a lista de runs 
                 runs.Add(runFile);
 
+                // Grava as tuplas ordenadas em um arquivo
                 int paginasGeradasNesteRun = 0;
                 GravarTuplasEmArquivo(
                     runFile,
@@ -274,14 +265,17 @@ namespace Tabela
             string nomeTabela,
             string delimitador = ",")
         {
+            // Verifica se a coluna de ordenação existe no cabeçalho
             int idxOrdenacao = Array.IndexOf(headers, colunaOrdenacao);
             if (idxOrdenacao == -1)
                 throw new ArgumentException($"Coluna '{colunaOrdenacao}' não encontrada no cabeçalho.");
 
             int passo = 1;
+            // Inicializa a lista atual com os nomes dos arquivos das runs
+            // listOfRuns contém os nomes dos arquivos das runs a serem mescladas
             var listaAtual = new List<string>(listOfRuns);
 
-            // Usa BufferPaginas em vez de List<Pagina.Pagina>
+            // Inicializa o buffer
             var buffer = new Buffer.BufferPaginas();
 
             totalPaginasGeradas = 0;
@@ -292,26 +286,30 @@ namespace Tabela
                 var listaNova = new List<string>();
                 for (int i = 0; i < listaAtual.Count; i += Buffer.BufferPaginas.Tamanho - 1)
                 {
-                    // runFileGroup contém apenas os nomes dos arquivos das runs a serem mescladas
+                    // Agrupa os arquivos de run em grupos de tamanho Buffer.BufferPaginas.Tamanho - 1
                     var runFileGroupNames = listaAtual.Skip(i).Take(Buffer.BufferPaginas.Tamanho - 1).ToList();
+
                     int paginasGeradasNesteMerge, paginasLidasNesteMerge, paginasEscritasNesteMerge;
+                    // Realiza o merge dos arquivos de run usando o buffer
                     string mergedRunFileName = MergeRunsWithBuffer(
                         runFileGroupNames, headers, idxOrdenacao, delimitador, passo, i / (Buffer.BufferPaginas.Tamanho - 1) + 1, buffer, nomeTabela,
                         out paginasGeradasNesteMerge, out paginasLidasNesteMerge, out paginasEscritasNesteMerge
                     );
+                    // Adiciona o nome do arquivo mesclado à lista nova
                     listaNova.Add(mergedRunFileName);
                     totalPaginasGeradas += paginasGeradasNesteMerge;
                     totalPaginasLidas += paginasLidasNesteMerge;
                     totalPaginasEscritas += paginasEscritasNesteMerge;
                 }
+                // Se a lista nova tiver apenas um arquivo, significa que o merge está completo
                 listaAtual = listaNova;
                 passo++;
             }
+            // Retorna o nome do arquivo final que contém a tabela ordenada
             return listaAtual[0];
         }
 
-        // Função auxiliar para merge de runs usando buffer compartilhado
-
+        // Função auxiliar para merge de runs
         private static string MergeRunsWithBuffer(
             List<string> runFiles,
             string[] headers,
@@ -325,6 +323,7 @@ namespace Tabela
             out int paginasLidas,
             out int paginasEscritas)
         {
+            // Verifica se há runs suficientes para o merge
             bool colunaNumerica = true;
             foreach (var run in runFiles)
             {
@@ -334,6 +333,7 @@ namespace Tabela
                 if (linha != null)
                 {
                     var valor = linha.Split(delimitador)[idxOrdenacao];
+                    // Verifica se o valor é numérico
                     if (!int.TryParse(valor, out _))
                     {
                         colunaNumerica = false;
@@ -342,7 +342,7 @@ namespace Tabela
                 }
             }
             int numEntradas = BufferPaginas.Tamanho - 1; // 3 páginas de entrada
-
+            // Define o diretorio dos arquivos temporários
             string tmpDir = "CSVtmp";
             if (!Directory.Exists(tmpDir))
                 Directory.CreateDirectory(tmpDir);
@@ -356,7 +356,7 @@ namespace Tabela
 
             paginasLidas = 0;
             paginasEscritas = 0;
-            // Preenche as páginas de entrada do buffer
+            // Preenche as páginas de entrada do buffer com tuplas
             for (int i = 0; i < runFiles.Count; i++)
             {
                 while (buffer[i].QtdTuplasOcup < Pagina.Pagina.MaxTuplasPorPagina)
@@ -369,7 +369,8 @@ namespace Tabela
                 if (buffer[i].QtdTuplasOcup > 0)
                     paginasLidas++;
             }
-
+            // Define  o nome do arquivo mesclado
+            // que será gerado após o merge
             string mergedFile = Path.Combine(tmpDir, $"{nomeTabela}_merged_passo{passo}_grupo{grupo}.csv");
             using var sw = new StreamWriter(mergedFile);
             sw.WriteLine(string.Join(delimitador, headers));
@@ -378,6 +379,11 @@ namespace Tabela
             int paginasGravadas = 0;
             while (true)
             {
+                // Cria uma lista de candidatos para a próxima tupla a ser escrita
+                // Cada candidato é uma tupla de (índice da run, tupla) que representa a próxima tupla de cada run 
+                // que ainda tem tuplas disponíveis nas páginas do buffer
+                // que será usada para determinar qual tupla é a menor entre as páginas no buffer
+                // Se não houver candidatos, sai do loop
                 var candidatos = new List<(int idxRun, Tupla.Tupla tupla)>();
                 for (int i = 0; i < runFiles.Count; i++)
                 {
@@ -387,7 +393,7 @@ namespace Tabela
 
                 if (candidatos.Count == 0)
                     break;
-
+                // Encontra a menor tupla entre os candidatos
                 (int idxRun, Tupla.Tupla tupla) menor;
                 if (colunaNumerica)
                 {
@@ -397,23 +403,31 @@ namespace Tabela
                 {
                     menor = candidatos.OrderBy(x => x.tupla.Cols[idxOrdenacao], StringComparer.Ordinal).First();
                 }
-
+                // Adiciona a menor tupla à última página do buffer
+                // Se a última página do buffer estiver cheia, grava ela no arquivo
                 if (!buffer[BufferPaginas.Tamanho - 1].AdicionarTupla(menor.tupla))
                 {
+                    // Grava a última página no arquivo
                     foreach (var t in buffer[BufferPaginas.Tamanho - 1].Tuplas)
                         sw.WriteLine(t.ParaLinhaArquivo(delimitador));
+                    // Reseta a última página do buffer e adiciona a menor tupla
                     paginasGravadas++;
                     paginasEscritas++;
                     buffer[BufferPaginas.Tamanho - 1].Tuplas.Clear();
                     buffer[BufferPaginas.Tamanho - 1].AdicionarTupla(menor.tupla);
                 }
-
+                // Incrementa o índice da run da menor tupla
+                // e lê a próxima tupla dessa run
                 idxs[menor.idxRun]++;
-
+                // Quando todas as tuplas da página de uma run já foram usadas
+                // menor.idx aponta para a run de onde saiu a menor tupla
                 if (idxs[menor.idxRun] >= buffer[menor.idxRun].QtdTuplasOcup)
                 {
+                    // Limpa a página de buffer corresponodente aquela run
                     buffer[menor.idxRun].Tuplas.Clear();
                     idxs[menor.idxRun] = 0;
+                    // Lê mais tuplas dessa run para preencher a página de buffer
+                    // até que ela esteja cheia ou não haja mais tuplas
                     while (buffer[menor.idxRun].QtdTuplasOcup < Pagina.Pagina.MaxTuplasPorPagina)
                     {
                         var linha = readers[menor.idxRun].ReadLine();
@@ -425,7 +439,8 @@ namespace Tabela
                         paginasLidas++;
                 }
             }
-
+            // Verifica se ainda há tuplas não gravadas na última página do buffer
+            // Se houver, grava elas no arquivo
             if (buffer[BufferPaginas.Tamanho - 1].QtdTuplasOcup > 0)
             {
                 foreach (var t in buffer[BufferPaginas.Tamanho - 1].Tuplas)
@@ -433,8 +448,9 @@ namespace Tabela
                 paginasGravadas++;
                 paginasEscritas++;
             }
-
+            // Fecha os readers abertos
             foreach (var r in readers) r.Dispose();
+            
             paginasGeradas = paginasGravadas;
             // Limpa o buffer para evitar problemas
             buffer.Limpar();

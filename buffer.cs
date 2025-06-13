@@ -21,7 +21,7 @@ namespace Buffer
                 pagina.Tuplas.Clear();
         }
 
-                public bool EstaCheio()
+        public bool EstaCheio()
         {
             return Paginas.Count >= Tamanho;
         }
