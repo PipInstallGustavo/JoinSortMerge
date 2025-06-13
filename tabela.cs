@@ -83,7 +83,7 @@ namespace Tabela
             PaginasGravadasDisco = 0;
             using var sw = new StreamWriter(NomeArquivo);
             
-            // Write headers first
+            // escrever cabeçalhos primeiro
             sw.WriteLine(string.Join(delimitador, Headers));
             
             foreach (var pagina in Pags.Where(p => p.QtdTuplasOcup > 0))
@@ -105,7 +105,6 @@ namespace Tabela
 
             using var sw = new StreamWriter(nomeArquivo, append);
             
-            // Write headers if this is a new file
             if (!append && headers != null)
                 sw.WriteLine(string.Join(delimitador, headers));
 
@@ -129,10 +128,13 @@ namespace Tabela
         public static IEnumerable<Tupla.Tupla> LerTuplasDeArquivoInterativo(string nomeArquivo, int qtdCols, 
             Action incrementarIO, string delimitador = ",")
         {
+            // var buffer = new Buffer.BufferPaginas();
+            // var pagina = new List<Tupla.Tupla>(10);
             if (!File.Exists(nomeArquivo))
                 yield break;
 
             int tuplasLidasNaPaginaAtual = 0;
+            int tuplasLidasTotal = 0;
 
             using var sr = new StreamReader(nomeArquivo);
             sr.ReadLine(); // Pular linha do cabeçalho
@@ -143,14 +145,31 @@ namespace Tabela
                 if (string.IsNullOrWhiteSpace(linha)) continue;
 
                 if (tuplasLidasNaPaginaAtual == 0)
-                    incrementarIO();
+                    incrementarIO(); //incrementa o quantidade de E/Ss 
 
                 yield return Tupla.Tupla.DaLinhaArquivo(linha, qtdCols, delimitador);
+                // Tupla.Tupla tupla_atual=tupla_atual=Tupla.Tupla.DaLinhaArquivo(linha, qtdCols, delimitador);
+                // buffer.Add(tupla_atual);
                 tuplasLidasNaPaginaAtual++;
+                tuplasLidasTotal++;
 
                 if (tuplasLidasNaPaginaAtual >= Pagina.Pagina.MaxTuplasPorPagina)
-                    tuplasLidasNaPaginaAtual = 0;
+                    tuplasLidasNaPaginaAtual=0;
+
+                // if (tuplasLidasNaPaginaAtual >= Pagina.Pagina.MaxTuplasPorPagina)
+                //     Pagina.Pagina pagina = pagina;
+                //     buffer.AdicionarPagina(pagina);
+                //     pagina.Clear();
+                
+
+                // if (buffer.EstaCheio()){
+                //     incrementarIO();
+                //     buffer.Limpar();
+                // }
             }
+
+
+            Console.WriteLine("[DEBUG] Tuplas Lidas no total (entrada): "+tuplasLidasTotal);
         }
 
 
@@ -293,6 +312,7 @@ namespace Tabela
         }
 
         // Função auxiliar para merge de runs usando buffer compartilhado
+
         private static string MergeRunsWithBuffer(
             List<string> runFiles,
             string[] headers,
