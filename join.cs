@@ -18,7 +18,7 @@ namespace Operador
         public int NumTuplasGeradas { get; private set; }
 
         //construtor
-        public Operador(Tabela.Tabela tabela1, Tabela.Tabela tabela2,
+        public Operador(Tabela.Tabela tabela1, Tabela.Tabela tabela2, 
             string colunaTabela1, string colunaTabela2, string arquivoSaida)
         {
             _tabela1 = tabela1;
@@ -35,6 +35,7 @@ namespace Operador
         public void Executar()
         {
             int paginasRunsGeradas1, paginasRunsGeradas2;
+            //ordenar as tabelas
             var runs1 = _tabela1.SortExternalRunsFromLoadedPages(out paginasRunsGeradas1, colunaOrdenacao: _colunaTabela1);
             Console.WriteLine($"[DEBUG] Páginas geradas nos runs da tabela 1: {paginasRunsGeradas1}");
             var runs2 = _tabela2.SortExternalRunsFromLoadedPages(out paginasRunsGeradas2, colunaOrdenacao: _colunaTabela2);
@@ -66,16 +67,15 @@ namespace Operador
                 return;
             }
 
-            int ioLeituraContador = 0;
-            Action incrementarIO = () => ioLeituraContador++;
+            Action incrementarIO_t1 = () => NumIOExecutados++;
+            Action incrementarIO_t2 = () => NumIOExecutados++;
 
             var enumerator1 = Tabela.Tabela.LerTuplasDeArquivoInterativo(
-                _tabela1.NomeArquivo, _tabela1.QtdCols, incrementarIO).GetEnumerator();
+                _tabela1.NomeArquivo, _tabela1.QtdCols, incrementarIO_t1).GetEnumerator();
 
             var enumerator2 = Tabela.Tabela.LerTuplasDeArquivoInterativo(
-                _tabela2.NomeArquivo, _tabela2.QtdCols, incrementarIO).GetEnumerator();
+                _tabela2.NomeArquivo, _tabela2.QtdCols, incrementarIO_t2).GetEnumerator();
 
-            NumIOExecutados += ioLeituraContador;
 
             bool hasNext1 = enumerator1.MoveNext();
             bool hasNext2 = enumerator2.MoveNext();
@@ -108,6 +108,7 @@ namespace Operador
                 {
                     var matchingTuplas1 = new List<Tupla.Tupla> { tupla1 };
                     hasNext1 = enumerator1.MoveNext();
+
                     while (hasNext1 && string.Compare(enumerator1.Current.Cols[indexCol1], valorCol1) == 0)
                     {
                         matchingTuplas1.Add(enumerator1.Current);
@@ -116,6 +117,7 @@ namespace Operador
 
                     var matchingTuplas2 = new List<Tupla.Tupla> { tupla2 };
                     hasNext2 = enumerator2.MoveNext();
+
                     while (hasNext2 && string.Compare(enumerator2.Current.Cols[indexCol2], valorCol2) == 0)
                     {
                         matchingTuplas2.Add(enumerator2.Current);
@@ -129,6 +131,7 @@ namespace Operador
                             var combinedCols = new string[mTupla1.QtdCols + mTupla2.QtdCols];
                             mTupla1.Cols.CopyTo(combinedCols, 0);
                             mTupla2.Cols.CopyTo(combinedCols, mTupla1.QtdCols);
+
                             tuplasResultantes.Add(new Tupla.Tupla(combinedCols));
                             NumTuplasGeradas++;
                         }
@@ -138,17 +141,24 @@ namespace Operador
 
             // criar o arquivo de saída
             File.WriteAllText(_arquivoSaida, string.Join(",", outputHeaders) + Environment.NewLine);
-
-            Tabela.Tabela.GravarTuplasEmArquivo(_arquivoSaida, tuplasResultantes,
-                paginas =>
-                {
+             Tabela.Tabela.GravarTuplasEmArquivo(_arquivoSaida, tuplasResultantes,
+                paginas => {
                     NumPagsGeradas = paginas;
                     Console.WriteLine($"[DEBUG] Páginas geradas na gravação do resultado final: {paginas}");
-                    NumIOExecutados += NumPagsGeradas;
-                    NumPagsGeradas += paginasMergeGeradas1 + paginasMergeGeradas2 + paginasRunsGeradas1 + paginasRunsGeradas2;
-                },
-                append: true
-            );
+                }, append: true);
+
+            NumIOExecutados += NumPagsGeradas;
+            NumPagsGeradas += paginasMergeGeradas1 + paginasMergeGeradas2 + paginasRunsGeradas1 + paginasRunsGeradas2;
+            NumIOExecutados+=NumPagsGeradas; //leitura + escrita
+            /*
+            // Deletar arquivos temporários
+            try { File.Delete(arquivoOrdenado1); } catch { }
+            try { File.Delete(arquivoOrdenado2); } catch { }
+            */
         }
     }
+
 }
+
+
+
